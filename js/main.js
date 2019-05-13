@@ -39,9 +39,9 @@ var SearchBox = debounce(function(){
 
     var modifiedObjectYoutubeProperties = function(){
         var results = [];
-        results = results.map.call( response.items, function(v){
+        results = response.items.map(function(objResponse){
             var contentObj = {name};
-			contentObj.name = v.snippet.title;
+			contentObj.name = objResponse.snippet.title;
             return contentObj;
         } );
         var newObj = {results};
