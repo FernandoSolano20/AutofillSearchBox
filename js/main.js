@@ -1,22 +1,32 @@
-var SearchBox = debounce(function(){
+var prevValue;
+var SearchBox = function() {
     var valueToSearch;
     var apiRequested;
     var response;
     var regex;
+    
 
-    var requestApi = function(){
+    var requestApi = debounce(function(event){
         valueToSearch = document.getElementById("searchBox").value.trim();
         var url;
         apiRequested = document.getElementById("change").checked;
         regex = new RegExp(valueToSearch, 'i');
-        if(apiRequested){
-            url = "https://www.googleapis.com/youtube/v3/search?key=AIzaSyCz3PQLjqxJPBUF-0rLdobTio3zJ_PPQaw&part=snippet&maxResults=20&q="+valueToSearch+"";
+        if(prevValue !== valueToSearch){
+            if(valueToSearch && event.keyCode !== 13){
+                if(apiRequested){
+                    url = "https://www.googleapis.com/youtube/v3/search?key=AIzaSyCz3PQLjqxJPBUF-0rLdobTio3zJ_PPQaw&part=snippet&maxResults=20&q="+valueToSearch+"";
+                }
+                else{
+                    url ="https://rickandmortyapi.com/api/character/?name="+valueToSearch+"";
+                }
+                xmlHttpRequest(url);
+            }
+            else{
+                deleteListOfSuggestion();
+                deleteSuggestionWriter();
+            }
         }
-        else{
-            url ="https://rickandmortyapi.com/api/character/?name="+valueToSearch+"";
-        }
-        xmlHttpRequest(url);
-    }
+    },250);
 
     var xmlHttpRequest = function(url){
         var xmlhttp = new XMLHttpRequest();
@@ -28,14 +38,24 @@ var SearchBox = debounce(function(){
                     modifiedObjectYoutubeProperties();
                 showResponses();
             }
-            else if(this.status === 404 || this.status !== 0){
+            else if(this.status === 404 && this.readyState === 2){
+                var labelCont = document.getElementById("changePlaceholder");
+                labelCont.textContent = "";
+                handleError();
+            }
+            else if(this.status !== 0){
                 var labelCont = document.getElementById("changePlaceholder");
                 labelCont.textContent = "";
             }
         }
         xmlhttp.open("GET", url, true);
+        xmlhttp.onerror = handleError;
         xmlhttp.send();
     }
+
+    var handleError = function() { 
+        alert( 'An error occurred \uD83D\uDE1E' );
+      }
 
     var modifiedObjectYoutubeProperties = function(){
         var results = [];
@@ -49,7 +69,6 @@ var SearchBox = debounce(function(){
     }
     
     var showResponses = function(){
-
         orderElements();
         sugggestionWriter();
         createSuggestionInDOM();
@@ -81,22 +100,21 @@ var SearchBox = debounce(function(){
     }
     
     var sugggestionWriter = function(){
+        prevValue = valueToSearch;
         var labelCont = document.getElementById("changePlaceholder");
-
-        if(valueToSearch){
-            if(response.results[0].name.search(regex) != 0){
-                var deleteCharacters = response.results[0].name.split(regex);
-                delete deleteCharacters[0];
-                var replaceCharacters = deleteCharacters.join(valueToSearch);
-            }
-            else{
-                var replaceCharacters =  response.results[0].name.replace(regex, valueToSearch);
-            }
-            labelCont.textContent = replaceCharacters;
+        if(response.results[0].name.search(regex) != 0){
+            var deleteCharacters = response.results[0].name.split(regex);
+            delete deleteCharacters[0];
+            var replaceCharacters = deleteCharacters.join(valueToSearch);
         }
         else{
-            labelCont.textContent = "";
+            var replaceCharacters =  response.results[0].name.replace(regex, valueToSearch);
         }
+        labelCont.textContent = replaceCharacters;
+    }
+
+    var deleteSuggestionWriter = function(){
+        document.getElementById("changePlaceholder").textContent = "";
     }
 
     var createSuggestionInDOM = function(){
@@ -105,6 +123,7 @@ var SearchBox = debounce(function(){
     
         var ul = document.createElement('ul');
         ul.setAttribute('id','listResult');
+        ul.setAttribute('tabindex','0');
         containerList.appendChild(ul);
     
         for(var index = 0; index < response.results.length; index++){
@@ -114,8 +133,21 @@ var SearchBox = debounce(function(){
             else{
                 var li = document.createElement('li');
                 li.setAttribute('class','elements');
+                li.addEventListener("click", setElementInBox);
                 li.innerHTML = response.results[index].name.replace(regex, valueToSearch.bold());
                 ul.appendChild(li);
+            }
+        }
+        ul.firstChild.className += " elementHover";
+    }
+
+    var setElementInBox = function(){
+        for(var index = 0; index < event.path.length; index++){
+            if(event.path[index].nodeName === "LI"){
+                document.getElementById("searchBox").value = event.path[index].textContent;
+                deleteListOfSuggestion();
+                deleteSuggestionWriter();
+                break;
             }
         }
     }
@@ -127,22 +159,60 @@ var SearchBox = debounce(function(){
             ulExist.parentNode.removeChild(ulExist);
         }
     }
-    requestApi();
-},250);
+
+    var selectElement = function(){
+        var ulExist = document.getElementById("listResult");
+        if(ulExist){
+            var actualLI = document.getElementsByClassName("elementHover")[0];
+            if(event.keyCode === 40){
+                var nextLI = actualLI.nextElementSibling;
+                actualLI.classList.remove("elementHover");
+                if(!nextLI){
+                    nextLI = document.getElementById("listResult").firstElementChild;
+                }
+                nextLI.className += " elementHover";
+            }
+            else if(event.keyCode === 38){
+                var previousLI = actualLI.previousElementSibling;
+                actualLI.classList.remove("elementHover");
+                if(!previousLI){
+                    previousLI = document.getElementById("listResult").lastElementChild;
+                }
+                previousLI.className += " elementHover";
+                event.preventDefault();
+            }
+            else if(event.keyCode === 13){
+                prevValue = "";
+                document.getElementById("searchBox"). value = actualLI.textContent;
+                event.preventDefault();
+            }
+        }
+    }
+
+    var attachEvents = function(){
+        var search = document.getElementById("searchBox");
+        search.addEventListener("keydown", selectElement);
+        search.addEventListener("keyup",function(){requestApi(event)});
+    }
+    return{
+        attachEvents:attachEvents
+    }     
+};
 
 function debounce(func, wait, immediate) {
-	var timeout;
+    var timeout;
 	return function() {
 		var context = this, args = arguments;
 		var later = function() {
 			timeout = null;
-			if (!immediate) func.apply(context, args);
+            if (!immediate) func.apply(context, args);
 		};
 		var callNow = immediate && !timeout;
 		clearTimeout(timeout);
 		timeout = setTimeout(later, wait);
-		if (callNow) func.apply(context, args);
-	};
+        if (callNow) func.apply(context, args);
+    };
 };
 
-document.getElementById("searchBox").addEventListener("keyup",SearchBox);
+var searchBox = SearchBox();
+searchBox.attachEvents();

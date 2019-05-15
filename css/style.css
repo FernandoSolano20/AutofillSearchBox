@@ -55,9 +55,15 @@
     }
     #container{
         position: absolute;
+        width: 362px;
     }
     .elements{
         list-style: none;
+        padding-bottom: 6px;
+        padding-left: 15px;
+        padding-top: 5px;
+        font-family: arial;
+        font-size: 16px;
     }
 
     .placeholder
@@ -83,4 +89,15 @@
         pointer-events: none;
         opacity: 0.6;
         font-family: Arial;
+    }
+
+    .elementHover{
+        background-color: #eee;
+        margin-left: -5px;
+    }
+
+    #listResult{
+        padding-left: 5px;
+        margin-top: 1px;
+        box-shadow: -1px 18px 55px -18px rgba(0,0,0,0.75);
     }
