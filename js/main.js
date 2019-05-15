@@ -165,7 +165,7 @@ var SearchBox = function() {
         if(ulExist){
             var actualLI = document.getElementsByClassName("elementHover")[0];
             if(event.keyCode === 40){
-                ulExist.scrollBy(0,30);
+                ulExist.scrollBy(0,(actualLI.scrollHeight));
                 var nextLI = actualLI.nextElementSibling;
                 actualLI.classList.remove("elementHover");
                 if(!nextLI){
@@ -175,7 +175,7 @@ var SearchBox = function() {
                 nextLI.className += " elementHover";
             }
             else if(event.keyCode === 38){
-                ulExist.scrollBy(0,-30);
+                ulExist.scrollBy(0,-(actualLI.scrollHeight));
                 var previousLI = actualLI.previousElementSibling;
                 actualLI.classList.remove("elementHover");
                 if(!previousLI){
