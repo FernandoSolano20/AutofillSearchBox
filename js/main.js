@@ -165,17 +165,21 @@ var SearchBox = function() {
         if(ulExist){
             var actualLI = document.getElementsByClassName("elementHover")[0];
             if(event.keyCode === 40){
+                ulExist.scrollBy(0,30);
                 var nextLI = actualLI.nextElementSibling;
                 actualLI.classList.remove("elementHover");
                 if(!nextLI){
                     nextLI = document.getElementById("listResult").firstElementChild;
+                    ulExist.scrollTo(0,0);
                 }
                 nextLI.className += " elementHover";
             }
             else if(event.keyCode === 38){
+                ulExist.scrollBy(0,-30);
                 var previousLI = actualLI.previousElementSibling;
                 actualLI.classList.remove("elementHover");
                 if(!previousLI){
+                    ulExist.scrollTop = ulExist.scrollHeight;
                     previousLI = document.getElementById("listResult").lastElementChild;
                 }
                 previousLI.className += " elementHover";

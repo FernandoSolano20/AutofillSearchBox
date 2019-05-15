@@ -100,4 +100,6 @@
         padding-left: 5px;
         margin-top: 1px;
         box-shadow: -1px 18px 55px -18px rgba(0,0,0,0.75);
+        overflow: auto;
+        max-height: 355px;
     }
